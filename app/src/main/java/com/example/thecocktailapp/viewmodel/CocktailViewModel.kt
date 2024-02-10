@@ -1,7 +1,8 @@
 package com.example.thecocktailapp.viewmodel
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.thecocktailapp.model.Cocktail
@@ -10,6 +11,9 @@ import com.example.thecocktailapp.model.toDomain
 import com.example.thecocktailapp.repository.CocktailRepository
 import com.example.thecocktailapp.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -17,20 +21,19 @@ import javax.inject.Inject
 class CocktailViewModel @Inject constructor(private val repository: CocktailRepository) :
     ViewModel() {
 
+    private val _data = MutableStateFlow<Resource<Cocktail>>(Resource.Loading())
+    val data: StateFlow<Resource<Cocktail>>
+        get() = _data.asStateFlow()
 
-    private val _data = MutableLiveData<Resource<Cocktail>>()
-    val data: LiveData<Resource<Cocktail>> = _data
+    var queryString by mutableStateOf("")
+        private set
 
-    private val _error = MutableLiveData<String>()
-    val error: LiveData<String> = _error
-
-
-    fun getCocktails(query: String) {
+    fun getCocktails(input: String) {
         viewModelScope.launch {
             try {
-                val response = repository.getCocktailDrinks(query)
+                val response = repository.getCocktailDrinks(input)
                 response.collect { resource ->
-                    _data.value = resource.data?.let { Resource.Success(it.toDomain()) }
+                    _data.value = resource.data?.let { Resource.Success(it.toDomain()) }!!
                 }
 
             } catch (e: Exception) {
@@ -39,4 +42,9 @@ class CocktailViewModel @Inject constructor(private val repository: CocktailRepo
         }
     }
 
+    fun updateDrinkQueryString(input: String?) {
+        input?.let {
+            queryString = it
+        }
+    }
 }
