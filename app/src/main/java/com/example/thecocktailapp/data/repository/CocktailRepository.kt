@@ -1,10 +1,8 @@
-package com.example.thecocktailapp.repository
+package com.example.thecocktailapp.data.repository
 
-import android.app.Application
-import com.example.thecocktailapp.datasource.CocktailDataSource
-import com.example.thecocktailapp.model.CocktailResponse
-import com.example.thecocktailapp.utils.FavoritePreferenceManager.cacheCocktailsPref
-import com.example.thecocktailapp.utils.FavoritePreferenceManager.getFavoriteCocktailsPref
+import com.example.thecocktailapp.data.datasource.CocktailDataSource
+import com.example.thecocktailapp.data.datasource.LocalCocktailDataSource
+import com.example.thecocktailapp.data.model.CocktailResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -15,25 +13,31 @@ import javax.inject.Inject
 
 class CocktailRepository @Inject constructor(
     private val cocktailDataSource: CocktailDataSource,
-    private val app: Application
+    private val localDataSource: LocalCocktailDataSource
 ) {
 
-    suspend fun getCocktailDrinksBasedOnQueryStr(s: String): Flow<List<CocktailResponse.Drink>?> =
-
+    fun getCocktailDrinksBasedOnQueryStr(s: String): Flow<List<CocktailResponse.Drink>?> =
         cocktailDataSource.getCocktailData(s)
             .map { cocktails ->
-                cocktails.body()?.drinks?.filter { it.strDrink?.contains(s, ignoreCase = true) ?: false }
+                cocktails.body()?.drinks
             }
-            .onEach {drinks ->
-                cacheCocktailsPref(app, drinks)
-            }
-            .catch { exception -> emit(getFavoriteCocktailsPref(app)) }
+            .onEach { drinks -> localDataSource.cacheCocktailsPref(drinks) }
+            .catch { exception -> exception.message }
+            .flowOn(Dispatchers.IO)
 
-    suspend fun getCocktailDetailsById(id: String): Flow<List<CocktailResponse.Drink>?> =
+    fun getCachedCocktailData(s: String): Flow<List<CocktailResponse.Drink>?> =
+        localDataSource.getCachedCocktailData()
+            .map { drinks ->
+                drinks?.filter {
+                    it.strDrink?.contains(s, ignoreCase = true) ?: false
+                }
+            }
+
+    fun getCocktailDetailsById(id: String): Flow<List<CocktailResponse.Drink>?> =
         cocktailDataSource.getCocktailDetailsById(id)
             .map { data ->
                 data.body()?.drinks?.filter { it.idDrink == id }
-            }.catch {it.stackTrace }
+            }
+            .catch { it.localizedMessage }
             .flowOn(Dispatchers.IO)
 }
-

@@ -1,35 +1,36 @@
-package com.example.thecocktailapp.viewmodel
+package com.example.thecocktailapp.ui.viewmodel
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.thecocktailapp.model.Cocktail
-import com.example.thecocktailapp.model.Cocktail.Drink
-import com.example.thecocktailapp.model.toDomain
-import com.example.thecocktailapp.repository.CocktailRepository
-import com.example.thecocktailapp.utils.Resource
+import com.example.thecocktailapp.data.model.CocktailResponse
+import com.example.thecocktailapp.data.repository.CocktailRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class CocktailDetailsViewModel @Inject constructor(private val repository: CocktailRepository) :
-    ViewModel() {
-    private val _drink = MutableLiveData<Drink>()
-    val drink: LiveData<Drink> = _drink
-
+class CocktailDetailsViewModel @Inject constructor(
+    private val repository: CocktailRepository
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(UiState())
+    val uiState: StateFlow<UiState> = _uiState
 
     fun getCocktailDetailsById(id: String) {
         viewModelScope.launch {
             val response = repository.getCocktailDetailsById(id)
-            response.collect {
-                _drink.value = it?.get(0)?.toDomain()
+            val drinks = response.firstOrNull().orEmpty()
+
+            _uiState.update {
+                it.copy(drink = drinks.firstOrNull())
             }
         }
     }
 
-    fun mapIngredientAndMeasurement(drink: Drink): List<Pair<String?, String?>> {
+    fun mapIngredientAndMeasurement(drink: CocktailResponse.Drink): List<Pair<String?, String?>> {
         val ingredients = listOf(
             drink.strIngredient1,
             drink.strIngredient2,
@@ -65,7 +66,24 @@ class CocktailDetailsViewModel @Inject constructor(private val repository: Cockt
             drink.strMeasure15
         )
 
-        return ingredients.zip(measurement)
+        return ingredients.filterNotNull().zip(measurement)
     }
 
+    data class UiState(
+        val loading: Boolean = false,
+        val error: String? = null,
+        val drink: CocktailResponse.Drink? = null
+    )
+//
+//        private fun toggleFavIconOnClick(drink: Cocktail.Drink) {
+//        isFavorite = if (isFavorite) {
+//            binding.icFav.setImageResource(R.drawable.ic_favorite_filled)
+////            PreferenceManager.saveFavoriteCocktailsPref(this, drink = drink)
+//            false
+//        } else {
+//            binding.icFav.setImageResource(R.drawable.ic_favorite)
+////            PreferenceManager.removeFavoriteCocktailsPref(this, drinkId = drink.idDrink)
+//            true
+//        }
+//    }
 }

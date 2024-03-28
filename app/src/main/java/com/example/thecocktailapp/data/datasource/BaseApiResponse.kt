@@ -1,4 +1,4 @@
-package com.example.thecocktailapp.datasource
+package com.example.thecocktailapp.data.datasource
 
 import com.example.thecocktailapp.utils.Resource
 import retrofit2.Response

@@ -1,4 +1,4 @@
-package com.example.thecocktailapp.model
+package com.example.thecocktailapp.data.model
 
 fun CocktailResponse.toDomain() = Cocktail(
     drinks = drinks.map { it.toDomain() }

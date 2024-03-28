@@ -1,6 +1,6 @@
-package com.example.thecocktailapp.datasource
+package com.example.thecocktailapp.data.datasource
 
-import com.example.thecocktailapp.model.CocktailResponse
+import com.example.thecocktailapp.data.model.CocktailResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.Response
@@ -11,12 +11,15 @@ class CocktailDataSource @Inject constructor(
 ) {
     fun getCocktailData(s: String): Flow<Response<CocktailResponse>> = flow {
         val response = cocktailDataApi.getCocktailData(s)
-        emit(response)
-
+        if (response.isSuccessful) {
+            emit(response)
+        }
     }
 
     fun getCocktailDetailsById(i: String): Flow<Response<CocktailResponse>> = flow {
         val response = cocktailDataApi.getCocktailDetailsById(i)
-        emit(response)
+        if (response.isSuccessful) {
+            emit(response)
+        }
     }
 }

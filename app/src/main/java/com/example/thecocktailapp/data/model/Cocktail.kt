@@ -1,10 +1,13 @@
-package com.example.thecocktailapp.model
+package com.example.thecocktailapp.data.model
 
 import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.Serializable
 
 data class Cocktail(
+    @SerializedName("drinks")
     val drinks: List<Drink>
 ) {
+    @Serializable
     data class Drink(
         val dateModified: String?,
         val idDrink: String,
@@ -41,7 +44,7 @@ data class Cocktail(
         @SerializedName("strInstructionsZH-HANS")
         val strInstructionsZHHANS: String?,
         @SerializedName("strInstructionsZH-HANT")
-        val strInstructionsZHHANT: String? = null,
+        val strInstructionsZHHANT: String?,
         val strMeasure1: String?,
         val strMeasure10: String?,
         val strMeasure11: String?,
@@ -58,6 +61,6 @@ data class Cocktail(
         val strMeasure8: String?,
         val strMeasure9: String?,
         val strTags: String?,
-        val strVideo: String?
+        val strVideo: String?,
     )
 }

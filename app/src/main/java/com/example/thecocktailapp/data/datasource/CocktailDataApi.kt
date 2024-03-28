@@ -1,6 +1,6 @@
-package com.example.thecocktailapp.datasource
+package com.example.thecocktailapp.data.datasource
 
-import com.example.thecocktailapp.model.CocktailResponse
+import com.example.thecocktailapp.data.model.CocktailResponse
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
