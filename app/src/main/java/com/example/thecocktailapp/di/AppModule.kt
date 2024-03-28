@@ -1,7 +1,9 @@
 package com.example.thecocktailapp.di
 
+import android.app.Application
+import com.example.thecocktailapp.datasource.CocktailDataApi
 import com.example.thecocktailapp.datasource.CocktailDataSource
-import com.example.thecocktailapp.datasource.CocktailDataSourceImpl
+import com.example.thecocktailapp.repository.CocktailRepository
 import com.example.thecocktailapp.utils.Constant.BASE_URL
 import dagger.Module
 import dagger.Provides
@@ -17,29 +19,34 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-//    @Singleton
-//    @Provides
-//    fun providesDataSource(cocktailDataSourceImpl: CocktailDataSourceImpl): CocktailDataSource =
-//        cocktailDataSourceImpl
+    @Singleton
+    @Provides
+    fun providesCocktailRepository(cocktailDataSource: CocktailDataSource, app: Application): CocktailRepository =
+        CocktailRepository(cocktailDataSource, app)
 
     @Singleton
     @Provides
-    fun providesOkHttpClient(): OkHttpClient {
-        val loggingInterceptor = HttpLoggingInterceptor()
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
-        return OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor)
-            .build()
-    }
+    fun providesCocktailDataSource(
+        cocktailDataApi: CocktailDataApi
+    ): CocktailDataSource = CocktailDataSource(cocktailDataApi)
 
-    @Singleton
-    @Provides
-    fun providesRetrofit(okHttpClient: OkHttpClient): CocktailDataSource {
-        return Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .client(okHttpClient)
-            .build()
-            .create(CocktailDataSource::class.java)
+        @Singleton
+        @Provides
+        fun providesOkHttpClient(): OkHttpClient {
+            val loggingInterceptor = HttpLoggingInterceptor()
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
+            return OkHttpClient.Builder()
+                .addInterceptor(loggingInterceptor)
+                .build()
+        }
+
+        @Singleton
+        @Provides
+        fun providesRetrofit(): CocktailDataApi {
+            return Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(CocktailDataApi::class.java)
+        }
     }
-}

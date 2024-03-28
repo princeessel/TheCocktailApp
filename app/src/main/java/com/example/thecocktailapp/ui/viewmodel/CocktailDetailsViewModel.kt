@@ -16,17 +16,15 @@ import javax.inject.Inject
 @HiltViewModel
 class CocktailDetailsViewModel @Inject constructor(private val repository: CocktailRepository) :
     ViewModel() {
-    private val _drink = MutableLiveData<Resource<Cocktail>>()
-    val drink: LiveData<Resource<Cocktail>> = _drink
+    private val _drink = MutableLiveData<Drink>()
+    val drink: LiveData<Drink> = _drink
 
 
     fun getCocktailDetailsById(id: String) {
         viewModelScope.launch {
             val response = repository.getCocktailDetailsById(id)
-            response.collect { resource ->
-                _drink.value = resource.data.let { cocktailResponse ->
-                    cocktailResponse?.let { Resource.Success(it.toDomain()) }
-                }
+            response.collect {
+                _drink.value = it?.get(0)?.toDomain()
             }
         }
     }

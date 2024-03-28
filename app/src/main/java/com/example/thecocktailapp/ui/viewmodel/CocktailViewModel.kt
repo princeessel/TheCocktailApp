@@ -3,17 +3,13 @@ package com.example.thecocktailapp.viewmodel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.thecocktailapp.model.Cocktail
 import com.example.thecocktailapp.model.CocktailResponse
-import com.example.thecocktailapp.model.toDomain
 import com.example.thecocktailapp.repository.CocktailRepository
-import com.example.thecocktailapp.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,23 +17,29 @@ import javax.inject.Inject
 class CocktailViewModel @Inject constructor(private val repository: CocktailRepository) :
     ViewModel() {
 
-    private val _data = MutableStateFlow<Resource<Cocktail>>(Resource.Loading())
-    val data: StateFlow<Resource<Cocktail>>
-        get() = _data.asStateFlow()
+    private val _data = MutableLiveData<List<CocktailResponse.Drink>>()
+    val data: LiveData<List<CocktailResponse.Drink>>
+        get() = _data
 
     var queryString by mutableStateOf("")
         private set
 
+    init {
+        getCocktails(queryString)
+    }
+
     fun getCocktails(input: String) {
         viewModelScope.launch {
             try {
-                val response = repository.getCocktailDrinks(input)
-                response.collect { resource ->
-                    _data.value = resource.data?.let { Resource.Success(it.toDomain()) }!!
-                }
+                repository.getCocktailDrinksBasedOnQueryStr(input)
+                    .collect {
+                        if (it?.isNotEmpty() == true) {
+                            _data.value = it
+                        }
+                    }
 
             } catch (e: Exception) {
-                Resource.Error<CocktailResponse>("Error encountered: + ${e.message}")
+                e.message
             }
         }
     }
@@ -48,3 +50,9 @@ class CocktailViewModel @Inject constructor(private val repository: CocktailRepo
         }
     }
 }
+
+data class UiState(
+    val loading: Boolean = false,
+    val error: String? = null,
+    val data: List<CocktailResponse.Drink> = emptyList()
+)
