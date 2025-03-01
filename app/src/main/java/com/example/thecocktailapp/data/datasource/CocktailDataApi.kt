@@ -17,4 +17,10 @@ interface CocktailDataApi {
     suspend fun getCocktailDetailsById(
         @Query("i") i: String
     ): Response<CocktailResponse>
+
+
+    @GET("hey.php")
+    suspend fun getCocktailHey(
+        @Query("s") i: String
+    ): Response<CocktailResponse>
 }

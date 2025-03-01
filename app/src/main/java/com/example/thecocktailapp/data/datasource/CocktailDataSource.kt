@@ -22,4 +22,10 @@ class CocktailDataSource @Inject constructor(
             emit(response)
         }
     }
+    fun getCocktailHey(i: String): Flow<Response<CocktailResponse>> = flow {
+        val response = cocktailDataApi.getCocktailHey(i)
+        if (response.isSuccessful) {
+            emit(response)
+        }
+    }
 }
